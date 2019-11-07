@@ -11,10 +11,8 @@ class ExternalAction(action.Action):
 
     def __init__(self, **kwargs):
         self.command = kwargs["command"]
-        self.outputs = kwargs["outputs"]
 
         del kwargs["command"]
-        del kwargs["outputs"]
 
         action.Action.__init__(self, **kwargs)
 
@@ -30,7 +28,6 @@ class ExternalAction(action.Action):
             status = "FAILED"
         
         logger.info(self.desc + ": " + substitutes["input_filepath"] + " : " + status)
-        
-        res = util.substitute(self.outputs.copy(), **substitutes)
-        
-        return res
+                
+        # return util.substitute(self.outputs.copy(), **substitutes)
+        return []
