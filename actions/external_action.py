@@ -29,5 +29,4 @@ class ExternalAction(action.Action):
         
         logger.info(self.desc + ": " + substitutes["input_filepath"] + " : " + status)
                 
-        # return util.substitute(self.outputs.copy(), **substitutes)
         return []
