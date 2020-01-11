@@ -18,16 +18,16 @@ class ExternalAction(action.Action):
 
     def execute(self, **substitutes):
         util.mkdir(os.path.dirname(substitutes["output_filepath"]))
-        
+
         for command in self.commands:
             cmd_subs = util.substitute(command.copy(), **substitutes)
             proc = subprocess.run(cmd_subs)
-            
+
             status = "SUCCESS"
             
             if proc.returncode:
                 status = "FAILED"
-            
+
         logger.info(self.desc + ": " + substitutes["input_filepath"] + " : " + status)
-                
+
         return []

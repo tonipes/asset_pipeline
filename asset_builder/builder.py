@@ -65,15 +65,21 @@ class Builder(object):
 
         list_of_outputs = []
 
+        list_of_processed_files = []
+
         for action_idx, files in grouped.items():
             action = self.config.actions[action_idx]
-            
+
             filtered_inputs = [f for f in files if self.need_update(f, action)]
 
-            for f in files:
-                self.write_cached_mtime(f)
+            list_of_processed_files += filtered_inputs
+
             if filtered_inputs:
                 outputs = action.run(filtered_inputs, self.input_folder, self.output_folder)
                 list_of_outputs += outputs
+
+        for f in list_of_processed_files:
+            self.write_cached_mtime(f)
+
 
         return list_of_outputs
