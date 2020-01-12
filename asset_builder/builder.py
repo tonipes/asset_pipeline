@@ -10,10 +10,11 @@ from . import util
 CACHE_EXT = ".cache"
 
 class Builder(object):
-    def __init__(self, input_folder, output_folder, cache_folder, config):
+    def __init__(self, input_folder, output_folder, cache_folder, temp_folder, config):
         self.input_folder = input_folder
         self.output_folder = output_folder
         self.cache_folder = cache_folder
+        self.temp_folder = temp_folder
         self.config = config
 
     def get_current_mtime(self, filepath):
@@ -75,7 +76,7 @@ class Builder(object):
             list_of_processed_files += filtered_inputs
 
             if filtered_inputs:
-                outputs = action.run(filtered_inputs, self.input_folder, self.output_folder)
+                outputs = action.run(filtered_inputs, self.input_folder, self.output_folder, self.temp_folder)
                 list_of_outputs += outputs
 
         for f in list_of_processed_files:

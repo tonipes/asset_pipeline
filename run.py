@@ -59,11 +59,16 @@ if __name__ == "__main__":
             and prevent unnecessary build actions \
             Example: ./build/assets/cache")
 
+    parser.add_argument('-m', '--temp',  required=True,
+        help="Folder for temp files. \
+            Example: ./build/assets/temp")
+
     args = parser.parse_args()
     
     source_folder   = os.path.normpath(os.path.join(".", args.source))
     target_folder   = os.path.normpath(os.path.join(".", args.target))
     cache_folder    = os.path.normpath(os.path.join(".", args.cache))
+    temp_folder     = os.path.normpath(os.path.join(".", args.temp))
 
     config = load_config(args.config)
 
@@ -73,7 +78,7 @@ if __name__ == "__main__":
     modified = False
     command_ran = False
 
-    builder = Builder(source_folder, target_folder, cache_folder, config)
+    builder = Builder(source_folder, target_folder, cache_folder, temp_folder, config)
 
     if args.clean:
         command_ran = True

@@ -23,12 +23,12 @@ class Action(metaclass=ActionRegistery):
     def execute(self, **substitutes):
         return []
 
-    def run(self, inputs, input_root_folder, output_root_folder):
+    def run(self, inputs, input_root_folder, output_root_folder, temp_root_folder):
         outputs = []
         rel_inputs = [os.path.join(input_root_folder, i) for i in inputs]
         
         for i in rel_inputs:
-            substitutions = build_substitutes(i, input_root_folder, output_root_folder)
+            substitutions = build_substitutes(i, input_root_folder, output_root_folder, temp_root_folder)
             mkdir(substitutions["output_local_folder"]) # Make sure that output path is created
             
             outputs += self.execute(**substitutions)
