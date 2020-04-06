@@ -9,11 +9,11 @@ class CopyAction(action.Action):
     name = "copy"
 
     def execute(self, **substitutes):        
-        input_file = substitutes["input_filepath"]
-        destination = substitutes["output_filepath"]
+        input_file = substitutes["target_filepath"]
+        destination = substitutes["source_filepath"]
 
         logger.info("Copying " + input_file + " => " + destination)
         
         shutil.copy(input_file, destination)
 
-        return [substitutes["relative_filepath"]]
+        return [substitutes["filepath_relative"]]

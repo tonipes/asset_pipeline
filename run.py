@@ -30,7 +30,7 @@ if __name__ == "__main__":
         help="Watch for changes")
 
     parser.add_argument('-d', '--delay', default=1, type=int, 
-        help="Delay for wathing")
+        help="Delay for watching")
 
     parser.add_argument('-a', '--address', default="localhost", type=str, 
         help="Address to report changes")
@@ -80,12 +80,16 @@ if __name__ == "__main__":
 
     builder = Builder(source_folder, target_folder, cache_folder, temp_folder, config)
 
+    shutil.rmtree(temp_folder, ignore_errors=True)
+    util.mkdir(temp_folder)
+
     if args.clean:
         command_ran = True
         logger.info("Cleaning output folder")
 
         shutil.rmtree(target_folder, ignore_errors=True)
         shutil.rmtree(cache_folder, ignore_errors=True)
+        shutil.rmtree(temp_folder, ignore_errors=True)
 
         util.mkdir(target_folder)
         util.mkdir(cache_folder)
@@ -94,9 +98,7 @@ if __name__ == "__main__":
         command_ran = True
         logger.info("Building assets")
 
-        all_files = util.all_files_in(source_folder)
-
-        outputs = builder.build(all_files)
+        outputs = builder.build()
 
     if args.watch:
         command_ran = True

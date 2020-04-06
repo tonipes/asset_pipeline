@@ -13,35 +13,28 @@ def mkdir(path):
 def substitute(inputs=[], **substitutions):
     return [i.format(**substitutions) for i in inputs]
 
-def build_substitutes(input_file, input_root_folder, output_root_folder, temp_root_folder):
-    relative_filepath = os.path.relpath(input_file, input_root_folder)
-    relative_folder = os.path.dirname(relative_filepath)
+def build_substitutes(filepath, main_source_root_folder, main_target_root_folder, main_temp_root_folder, source = "source", target = "target"):
+    source_root_folder = main_source_root_folder  if source == "source" else main_temp_root_folder
+    target_root_folder = main_target_root_folder if target == "target" else main_temp_root_folder
 
-    output_file = os.path.normpath(os.path.join(output_root_folder, relative_filepath))
-    temp_file = os.path.normpath(os.path.join(temp_root_folder, relative_filepath))
+    source_filepath = os.path.join(source_root_folder, filepath)
+    target_filepath = os.path.join(target_root_folder, filepath)
 
-    input_local_folder = os.path.normpath(os.path.join(input_root_folder, relative_folder))
-    output_local_folder = os.path.normpath(os.path.join(output_root_folder, relative_folder))
-    
     return {
-        "file_name":            os.path.basename(input_file),
-        "file_basename":        os.path.splitext(os.path.basename(input_file))[0],
-        "file_extension":       os.path.splitext(os.path.basename(input_file))[1],
+        "file_name":            os.path.basename(filepath),
+        "file_basename":        os.path.splitext(os.path.basename(filepath))[0],
+        "file_extension":       os.path.splitext(os.path.basename(filepath))[1][1:],
+        "filepath_relative":    filepath,
         
-        "temp_file":            temp_file,
+        "source_filepath_name": os.path.splitext(source_filepath)[0],
+        "target_filepath_name": os.path.splitext(target_filepath)[0],
 
-        "relative_folder":      relative_folder,
-        "relative_filepath":    relative_filepath,
+        "source_filepath_dir":  os.path.dirname(source_filepath),
+        "target_filepath_dir":  os.path.dirname(target_filepath),
 
-        "input_filepath_name":  os.path.splitext(input_file)[0],
-        "output_filepath_name":  os.path.splitext(output_file)[0],
+        "source_filepath":      source_filepath,
+        "target_filepath":      target_filepath,
 
-        "input_filepath":       input_file,
-        "output_filepath":      output_file,
-
-        "input_local_folder":   input_local_folder,
-        "output_local_folder":  output_local_folder,
-
-        "input_root_folder":    input_root_folder,
-        "output_root_folder":   output_root_folder,
+        "source_root_folder":   source_root_folder,
+        "target_root_folder":   target_root_folder,
     }
