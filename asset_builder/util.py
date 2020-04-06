@@ -33,6 +33,9 @@ def build_substitutes(input_file, input_root_folder, output_root_folder, temp_ro
         "relative_folder":      relative_folder,
         "relative_filepath":    relative_filepath,
 
+        "input_filepath_name":  os.path.splitext(input_file)[0],
+        "output_filepath_name":  os.path.splitext(output_file)[0],
+
         "input_filepath":       input_file,
         "output_filepath":      output_file,
 
