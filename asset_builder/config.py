@@ -21,4 +21,6 @@ class Config(object):
     def __init__(self, raw):
         parsed = json.loads(raw, object_hook=action_decoder)
         self.actions = parsed["actions"]
+        self.globals = parsed["globals"]
+
         self.globs = unpack([action.globs for action in self.actions])

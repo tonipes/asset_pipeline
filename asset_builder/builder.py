@@ -80,7 +80,7 @@ class Builder(object):
             list_of_processed_files += filtered_files
 
             if filtered_files:
-                outputs = action.run(filtered_files, self.source_folder, self.target_folder, self.temp_folder, "source")
+                outputs = action.run(filtered_files, self.source_folder, self.target_folder, self.temp_folder, self.config.globals, "source")
                 list_of_outputs += outputs
 
         for f in list_of_processed_files:
@@ -90,6 +90,6 @@ class Builder(object):
         for action_idx, files in self.get_grouped_files(self.temp_folder).items():
             action = self.config.actions[action_idx]
             if files:
-                outputs = action.run(files, self.source_folder, self.target_folder, self.temp_folder, "temp")
+                outputs = action.run(files, self.source_folder, self.target_folder, self.temp_folder, self.config.globals, "temp")
 
         return list_of_outputs

@@ -9,8 +9,8 @@ class CopyAction(action.Action):
     name = "copy"
 
     def execute(self, **substitutes):        
-        input_file = substitutes["target_filepath"]
-        destination = substitutes["source_filepath"]
+        input_file = substitutes["source_filepath"]
+        destination = substitutes["target_filepath"]
 
         logger.info("Copying " + input_file + " => " + destination)
         
