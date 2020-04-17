@@ -17,8 +17,6 @@ class ExternalAction(action.Action):
         action.Action.__init__(self, **kwargs)
 
     def execute(self, **substitutes):
-        util.mkdir(substitutes["target_filepath_dir"])
-
         for command in self.commands:
             cmd_subs = util.substitute(command.copy(), **substitutes)
             proc = subprocess.run(cmd_subs)

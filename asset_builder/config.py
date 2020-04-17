@@ -7,7 +7,7 @@ def unpack(l):
     return [i for s in l for i in s]
 
 def action_decoder(obj):
-    if 'desc' in obj and 'globs' in obj and 'type' in obj:
+    if 'desc' in obj and 'type' in obj:
         matches = list(filter(lambda t: t.name == obj['type'], all_action_types))
 
         if not matches:
@@ -22,5 +22,7 @@ class Config(object):
         parsed = json.loads(raw, object_hook=action_decoder)
         self.actions = parsed["actions"]
         self.globals = parsed["globals"]
+
+        self.post_build_actions = parsed["post_build_actions"]
 
         self.globs = unpack([action.globs for action in self.actions])

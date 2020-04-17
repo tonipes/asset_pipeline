@@ -56,6 +56,7 @@ class Builder(object):
 
     def get_grouped_files(self, folder):
         source_files = util.all_files_in(folder)
+
         grouped = defaultdict(list)
 
         for i, action in enumerate(self.config.actions):
@@ -67,9 +68,25 @@ class Builder(object):
 
         return grouped
 
+    def run_action(self, files, action, main_subs, source):
+        outputs = []
+        
+        for f in files:
+            file_subs = util.build_substitutes(f, self.source_folder, self.target_folder, self.temp_folder, source, action.target)
+            
+            subs = {**self.config.globals, **main_subs, **file_subs}
+            
+            util.mkdir(subs["target_filepath_dir"])
+                        
+            outputs += action.run(subs)
+
+        return outputs
+
     def build(self):
         list_of_outputs = []
         list_of_processed_files = []
+
+        main_subs = {**self.config.globals, **util.build_main_substitutions(self.source_folder, self.target_folder, self.temp_folder)}
 
         # From source folder
         for action_idx, files in self.get_grouped_files(self.source_folder).items():
@@ -78,18 +95,20 @@ class Builder(object):
             filtered_files = [f for f in files if self.need_update(f, action)]
 
             list_of_processed_files += filtered_files
+            list_of_outputs = self.run_action(filtered_files, action, main_subs, "source")
 
-            if filtered_files:
-                outputs = action.run(filtered_files, self.source_folder, self.target_folder, self.temp_folder, self.config.globals, "source")
-                list_of_outputs += outputs
-
+        # Update process time
         for f in list_of_processed_files:
             self.write_cached_mtime(f)
 
         # From temp folder
         for action_idx, files in self.get_grouped_files(self.temp_folder).items():
             action = self.config.actions[action_idx]
-            if files:
-                outputs = action.run(files, self.source_folder, self.target_folder, self.temp_folder, self.config.globals, "temp")
+            self.run_action(files, action, main_subs, "temp")
+
+        # Post build 
+        if len(list_of_outputs) > 0:
+            for action in self.config.post_build_actions:
+                action.run(main_subs)
 
         return list_of_outputs
