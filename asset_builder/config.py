@@ -7,7 +7,7 @@ def unpack(l):
     return [i for s in l for i in s]
 
 def action_decoder(obj):
-    if 'desc' in obj and 'type' in obj:
+    if 'type' in obj:
         matches = list(filter(lambda t: t.name == obj['type'], all_action_types))
 
         if not matches:

@@ -19,10 +19,11 @@ class Action(metaclass=ActionRegistery):
     def __init__(self, **kwargs):
         self.target = kwargs["target"] if "target" in kwargs else "target"
         self.globs = kwargs["globs"] if "globs" in kwargs else []
-        self.desc = kwargs["desc"] if "globs" in kwargs else None
+        self.name = kwargs["name"] if "name" in kwargs else None
+        self.category = kwargs["category"] if "category" in kwargs else None
 
     def execute(self, **substitutes):
-        return []
+        return True
 
     def run(self, subs):
         return self.execute(**subs)

@@ -53,6 +53,12 @@ if __name__ == "__main__":
     parser.add_argument('-t', '--target', required=True,
         help="Target folder. Example: ./build/assets")
 
+    parser.add_argument('-g', '--categories', required=False, type=str, nargs='+',
+        help="Categories to build. Defaults to all")
+
+    parser.add_argument('-f', '--force', required=False, action="store_true", 
+        help="Force. Disable cache check")
+
     parser.add_argument('-o', '--cache',  required=True,
         help="Folder for cache files. \
             These files are used to detect changes in source files \
@@ -65,6 +71,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     
+    # print(args.force)
+    # exit(0)
+
     source_folder   = os.path.normpath(os.path.join(".", args.source))
     target_folder   = os.path.normpath(os.path.join(".", args.target))
     cache_folder    = os.path.normpath(os.path.join(".", args.cache))
@@ -98,7 +107,7 @@ if __name__ == "__main__":
         command_ran = True
         logger.info("Building assets")
 
-        outputs = builder.build()
+        outputs = builder.build(args.force, args.categories)
 
     if args.watch:
         command_ran = True

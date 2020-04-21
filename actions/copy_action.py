@@ -12,8 +12,11 @@ class CopyAction(action.Action):
         input_file = substitutes["source_filepath"]
         destination = substitutes["target_filepath"]
 
-        logger.info("Copying " + input_file + " => " + destination)
-        
-        shutil.copy(input_file, destination)
-
-        return [substitutes["filepath_relative"]]
+        logger.info("copy " + substitutes["filepath_relative"])
+    
+        try:
+            shutil.copy(input_file, destination)
+            return True
+        except Exception as e:
+            pass
+        return False

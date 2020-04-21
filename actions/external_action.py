@@ -19,13 +19,18 @@ class ExternalAction(action.Action):
     def execute(self, **substitutes):
         for command in self.commands:
             cmd_subs = util.substitute(command.copy(), **substitutes)
-            proc = subprocess.run(cmd_subs)
+            proc = subprocess.run(cmd_subs, 
+                # capture_output=True,
+                universal_newlines=True
+            )
 
-            status = "SUCCESS"
+            status = True
             
             if proc.returncode:
-                status = "FAILED"
+                status = False
+                print(proc.stdout)
+                print(proc.stderr)
 
-        logger.info(self.desc + ": " + substitutes["filepath_relative"] + " : " + status)
+        logger.info(self.name + ": " + substitutes["filepath_relative"] + " : " + ("SUCCESS" if status else "FAILED"))
 
-        return []
+        return status
