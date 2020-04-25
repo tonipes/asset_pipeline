@@ -11,19 +11,17 @@ def mkdir(path):
         os.makedirs(path, exist_ok=True)
 
 def substitute(inputs=[], **substitutions):
+    
     return [i.format(**substitutions) for i in inputs]
 
-def build_main_substitutions(main_source_root_folder, main_target_root_folder, main_temp_root_folder):
+def build_main_substitutions(main_source_root_folder, main_target_root_folder, main_staging_root_folder):
     return {
-        "main_source_root_folder":  main_source_root_folder,
-        "main_temp_root_folder":    main_temp_root_folder,
-        "main_target_root_folder":  main_target_root_folder,
+        "main_source_root_folder":      main_source_root_folder,
+        "main_staging_root_folder":     main_staging_root_folder,
+        "main_target_root_folder":      main_target_root_folder,
     }
 
-def build_substitutes(filepath, main_source_root_folder, main_target_root_folder, main_temp_root_folder, source = "source", target = "target"):
-    source_root_folder = main_source_root_folder  if source == "source" else main_temp_root_folder
-    target_root_folder = main_target_root_folder if target == "target" else main_temp_root_folder
-
+def build_substitutes(filepath, source_root_folder, target_root_folder):
     source_filepath = os.path.join(source_root_folder, filepath)
     target_filepath = os.path.join(target_root_folder, filepath)
 
@@ -45,7 +43,5 @@ def build_substitutes(filepath, main_source_root_folder, main_target_root_folder
         "source_root_folder":   source_root_folder,
         "target_root_folder":   target_root_folder,
     }
-    
-    subs.update(build_main_substitutions(main_source_root_folder, main_target_root_folder, main_temp_root_folder))
-    
+        
     return subs

@@ -1,5 +1,6 @@
 import os
 import shutil
+
 import logging as logger
 
 from asset_builder import action
@@ -12,11 +13,14 @@ class CopyAction(action.Action):
         input_file = substitutes["source_filepath"]
         destination = substitutes["target_filepath"]
 
-        logger.info("copy " + substitutes["filepath_relative"])
-    
+        status = False
+
         try:
             shutil.copy(input_file, destination)
-            return True
-        except Exception as e:
+            status = True
+        except:
             pass
-        return False
+        
+        logger.info("{:8}: {:8}: {}".format("copy", ("SUCCESS" if status else "FAILED"), substitutes["filepath_relative"]))
+        
+        return status

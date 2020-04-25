@@ -20,7 +20,7 @@ class ExternalAction(action.Action):
         for command in self.commands:
             cmd_subs = util.substitute(command.copy(), **substitutes)
             proc = subprocess.run(cmd_subs, 
-                # capture_output=True,
+                capture_output=True,
                 universal_newlines=True
             )
 
@@ -31,6 +31,7 @@ class ExternalAction(action.Action):
                 print(proc.stdout)
                 print(proc.stderr)
 
-        logger.info(self.name + ": " + substitutes["filepath_relative"] + " : " + ("SUCCESS" if status else "FAILED"))
+        logger.info("{:8}: {:8}: {}".format(self.name, ("SUCCESS" if status else "FAILED"), substitutes["filepath_relative"]))
+        # logger.info(self.name + ": " + substitutes["filepath_relative"] + " : " + ("SUCCESS" if status else "FAILED"))
 
         return status

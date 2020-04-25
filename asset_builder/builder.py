@@ -10,11 +10,11 @@ from . import util
 CACHE_EXT = ".cache"
 
 class Builder(object):
-    def __init__(self, source_folder, target_folder, cache_folder, temp_folder, config):
+    def __init__(self, source_folder, target_folder, cache_folder, staging_folder, config):
         self.source_folder = source_folder
         self.target_folder = target_folder
         self.cache_folder = cache_folder
-        self.temp_folder = temp_folder
+        self.staging_folder = staging_folder
         self.config = config
 
     def get_current_mtime(self, filepath):
@@ -68,11 +68,14 @@ class Builder(object):
 
         return grouped
 
-    def run_action(self, files, action, main_subs, source):
+    def run_action(self, files, action, main_subs, source_folder):
         processed_files = []
         
         for f in files:
-            file_subs = util.build_substitutes(f, self.source_folder, self.target_folder, self.temp_folder, source, action.target)
+            # source_folder = self.source_folder if source == "source" else self.staging_folder
+            target_folder = self.target_folder if action.target == "target" else self.staging_folder
+
+            file_subs = util.build_substitutes(f, source_folder, target_folder)
             
             subs = {**self.config.globals, **main_subs, **file_subs}
             
@@ -88,7 +91,7 @@ class Builder(object):
         list_of_outputs = []
         list_of_processed_files = []
 
-        main_subs = {**self.config.globals, **util.build_main_substitutions(self.source_folder, self.target_folder, self.temp_folder)}
+        main_subs = {**self.config.globals, **util.build_main_substitutions(self.source_folder, self.target_folder, self.staging_folder)}
 
         # From source folder
         for action_idx, files in self.get_grouped_files(self.source_folder).items():
@@ -96,17 +99,17 @@ class Builder(object):
             if not categories or action.category in categories:
                 filtered_files = [f for f in files if self.need_update(f, action)] if not force else files
 
-                list_of_processed_files += self.run_action(filtered_files, action, main_subs, "source")
+                list_of_processed_files += self.run_action(filtered_files, action, main_subs, self.source_folder)
 
         # Update process time
         for f in list_of_processed_files:
             self.write_cached_mtime(f)
 
-        # From temp folder
-        for action_idx, files in self.get_grouped_files(self.temp_folder).items():
+        # From staging folder
+        for action_idx, files in self.get_grouped_files(self.staging_folder).items():
             action = self.config.actions[action_idx]
             if not categories or action.category in categories:
-                self.run_action(files, action, main_subs, "temp")
+                self.run_action(files, action, main_subs, self.staging_folder)
 
         # Post build 
         if len(list_of_outputs) > 0:

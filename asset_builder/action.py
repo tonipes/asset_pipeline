@@ -4,7 +4,6 @@ from .util import mkdir
 
 all_action_types = set()
 
-
 class ActionRegistery(type):
     def __new__(cls, clsname, bases, attrs):
         newclass = super(ActionRegistery, cls).__new__(cls, clsname, bases, attrs)
@@ -17,10 +16,10 @@ class Action(metaclass=ActionRegistery):
     force_build = False
 
     def __init__(self, **kwargs):
-        self.target = kwargs["target"] if "target" in kwargs else "target"
-        self.globs = kwargs["globs"] if "globs" in kwargs else []
-        self.name = kwargs["name"] if "name" in kwargs else None
-        self.category = kwargs["category"] if "category" in kwargs else None
+        self.target     = kwargs["target"]      if "target"     in kwargs else "target"
+        self.globs      = kwargs["globs"]       if "globs"      in kwargs else []
+        self.name       = kwargs["name"]        if "name"       in kwargs else None
+        self.category   = kwargs["category"]    if "category"   in kwargs else None
 
     def execute(self, **substitutes):
         return True

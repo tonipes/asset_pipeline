@@ -65,9 +65,9 @@ if __name__ == "__main__":
             and prevent unnecessary build actions \
             Example: ./build/assets/cache")
 
-    parser.add_argument('-m', '--temp',  required=True,
-        help="Folder for temp files. \
-            Example: ./build/assets/temp")
+    parser.add_argument('-m', '--staging',  required=True,
+        help="Folder for staging files. \
+            Example: ./build/assets/staging")
 
     args = parser.parse_args()
     
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     source_folder   = os.path.normpath(os.path.join(".", args.source))
     target_folder   = os.path.normpath(os.path.join(".", args.target))
     cache_folder    = os.path.normpath(os.path.join(".", args.cache))
-    temp_folder     = os.path.normpath(os.path.join(".", args.temp))
+    staging_folder  = os.path.normpath(os.path.join(".", args.staging))
 
     config = load_config(args.config)
 
@@ -87,10 +87,10 @@ if __name__ == "__main__":
     modified = False
     command_ran = False
 
-    builder = Builder(source_folder, target_folder, cache_folder, temp_folder, config)
+    builder = Builder(source_folder, target_folder, cache_folder, staging_folder, config)
 
-    shutil.rmtree(temp_folder, ignore_errors=True)
-    util.mkdir(temp_folder)
+    shutil.rmtree(staging_folder, ignore_errors=True)
+    util.mkdir(staging_folder)
 
     if args.clean:
         command_ran = True
@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
         shutil.rmtree(target_folder, ignore_errors=True)
         shutil.rmtree(cache_folder, ignore_errors=True)
-        shutil.rmtree(temp_folder, ignore_errors=True)
+        shutil.rmtree(staging_folder, ignore_errors=True)
 
         util.mkdir(target_folder)
         util.mkdir(cache_folder)
