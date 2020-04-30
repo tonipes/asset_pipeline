@@ -4,6 +4,7 @@ import fnmatch
 import datetime
 import logging
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, wait
 
 from . import util
 
@@ -16,6 +17,7 @@ class Builder(object):
         self.cache_folder = cache_folder
         self.staging_folder = staging_folder
         self.config = config
+        self.main_subs = {**self.config.globals, **util.build_main_substitutions(self.source_folder, self.target_folder, self.staging_folder)}
 
     def get_current_mtime(self, filepath):
         return os.path.getmtime(os.path.join(self.source_folder, filepath))
@@ -68,52 +70,83 @@ class Builder(object):
 
         return grouped
 
-    def run_action(self, files, action, main_subs, source_folder):
+    # def run_action(self, files, action, main_subs, source_folder, verbose=False):
+    #     processed_files = []
+        
+    #     for f in files:
+    #         # source_folder = self.source_folder if source == "source" else self.staging_folder
+    #         target_folder = self.target_folder if action.target == "target" else self.staging_folder
+
+    #         file_subs = util.build_substitutes(f, source_folder, target_folder)
+            
+    #         subs = {**self.config.globals, **main_subs, **file_subs}
+            
+    #         util.mkdir(subs["target_filepath_dir"])
+
+    #         result = action.run(subs, verbose)
+    #         if result:
+    #             processed_files.append(f)
+
+    #     return processed_files
+
+    def run_action(self, f, action, main_subs, source_folder, verbose=False):
         processed_files = []
         
-        for f in files:
-            # source_folder = self.source_folder if source == "source" else self.staging_folder
-            target_folder = self.target_folder if action.target == "target" else self.staging_folder
+        # source_folder = self.source_folder if source == "source" else self.staging_folder
+        target_folder = self.target_folder if action.target == "target" else self.staging_folder
 
-            file_subs = util.build_substitutes(f, source_folder, target_folder)
-            
-            subs = {**self.config.globals, **main_subs, **file_subs}
-            
-            util.mkdir(subs["target_filepath_dir"])
+        file_subs = util.build_substitutes(f, source_folder, target_folder)
+        
+        subs = {**self.config.globals, **main_subs, **file_subs}
+        
+        util.mkdir(subs["target_filepath_dir"])
 
-            result = action.run(subs)
-            if result:
-                processed_files.append(f)
+        return action.run(subs, verbose)
 
-        return processed_files
+    def post_build(self, verbose=False):
+        for action in self.config.post_build_actions:
+            action.run(self.main_subs, verbose)
 
-    def build(self, force=False, categories=None):
+    def build(self, force=False, categories=None, verbose=False):
         list_of_outputs = []
         list_of_processed_files = []
 
-        main_subs = {**self.config.globals, **util.build_main_substitutions(self.source_folder, self.target_folder, self.staging_folder)}
+        executor = ThreadPoolExecutor()
 
         # From source folder
+        process = []
         for action_idx, files in self.get_grouped_files(self.source_folder).items():
             action = self.config.actions[action_idx]
             if not categories or action.category in categories:
                 filtered_files = [f for f in files if self.need_update(f, action)] if not force else files
+                
+                for f in filtered_files:
+                    process.append([f, 
+                        executor.submit(self.run_action, f, action, self.main_subs, self.source_folder, verbose)
+                    ])
 
-                list_of_processed_files += self.run_action(filtered_files, action, main_subs, self.source_folder)
+        files = [x[0] for x in process]
+        futus = [x[1] for x in process]
+        
+        wait(futus)
 
         # Update process time
-        for f in list_of_processed_files:
-            self.write_cached_mtime(f)
+        for f, futu in process:
+            if futu.result():
+                self.write_cached_mtime(f)
+
+        process.clear()
 
         # From staging folder
         for action_idx, files in self.get_grouped_files(self.staging_folder).items():
             action = self.config.actions[action_idx]
             if not categories or action.category in categories:
-                self.run_action(files, action, main_subs, self.staging_folder)
+                for f in files:
+                    process.append([f, 
+                        executor.submit(self.run_action, f, action, self.main_subs, self.staging_folder, verbose)
+                    ])
 
-        # Post build 
-        if len(list_of_outputs) > 0:
-            for action in self.config.post_build_actions:
-                action.run(main_subs)
+        wait([x[1] for x in process])
+
 
         return list_of_outputs

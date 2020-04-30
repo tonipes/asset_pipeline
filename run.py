@@ -6,12 +6,16 @@ import time
 import argparse
 import shutil
 import subprocess
+import logging
 import logging as logger
 
 from asset_builder import Watcher, Reporter, Builder, Config, util
 
 from actions import copy_action
 from actions import external_action
+
+# FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
+# logging.basicConfig(format=FORMAT)
 
 def load_config(path):
     config_file = open(path)
@@ -21,7 +25,8 @@ def load_config(path):
 
 if __name__ == "__main__":
     logger.basicConfig(level=logger.INFO,
-                        format='%(threadName)s : %(asctime)s - %(message)s',
+                        format='%(asctime)s - %(message)s',
+                        # format='%(threadName)-15s : %(asctime)s - %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 
     parser = argparse.ArgumentParser(description='Asset Builder')
@@ -35,14 +40,17 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--address', default="localhost", type=str, 
         help="Address to report changes")
 
-    parser.add_argument('-p', '--port', default=6066, type=int, 
-        help="Port to report builded files to")
+    # parser.add_argument('-p', '--port', default=6066, type=int, 
+    #     help="Port to report builded files to")
 
     parser.add_argument('-c', '--clean', action="store_true", 
         help="Clean before build")
 
     parser.add_argument('-b', '--build', action="store_true", 
         help="Do build")
+
+    parser.add_argument('-p', '--post', action="store_true", 
+        help="Do post puild")
 
     parser.add_argument('-C', '--config', required=True,
         help="Config file")
@@ -58,6 +66,9 @@ if __name__ == "__main__":
 
     parser.add_argument('-f', '--force', required=False, action="store_true", 
         help="Force. Disable cache check")
+
+    parser.add_argument('-v', '--verbose', required=False, action="store_true", 
+        help="Verbose")
 
     parser.add_argument('-o', '--cache',  required=True,
         help="Folder for cache files. \
@@ -83,7 +94,7 @@ if __name__ == "__main__":
 
     config_path = os.path.dirname(args.config)
     config_file = os.path.basename(args.config)
-
+    
     modified = False
     command_ran = False
 
@@ -105,9 +116,14 @@ if __name__ == "__main__":
 
     if args.build:
         command_ran = True
-        logger.info("Building assets")
+        logger.info("Asset build actions")
 
-        outputs = builder.build(args.force, args.categories)
+        outputs = builder.build(args.force, args.categories, args.verbose)
+
+    if args.post:
+        command_ran = True
+        logger.info("Post build actions")
+        builder.post_build(args.verbose)
 
     if args.watch:
         command_ran = True

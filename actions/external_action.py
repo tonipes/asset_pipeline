@@ -1,7 +1,6 @@
 import subprocess
 import os
 
-import logging as logger
 
 from asset_builder import action
 from asset_builder import util
@@ -16,7 +15,7 @@ class ExternalAction(action.Action):
 
         action.Action.__init__(self, **kwargs)
 
-    def execute(self, **substitutes):
+    def execute(self, verbose=False, **substitutes):
         for command in self.commands:
             cmd_subs = util.substitute(command.copy(), **substitutes)
             proc = subprocess.run(cmd_subs, 
@@ -28,10 +27,16 @@ class ExternalAction(action.Action):
             
             if proc.returncode:
                 status = False
+            
+            if (not status) or verbose:
                 print(proc.stdout)
                 print(proc.stderr)
+        
+        # if "filepath_relative" in substitutes:
+        #     logger.info("{:8}: {:8}: {}".format(self.name, ("SUCCESS" if status else "FAILED"), substitutes["filepath_relative"]))
+        # else:
+        #     logger.info("{:8}: {:8}".format(self.name, ("SUCCESS" if status else "FAILED")))
 
-        logger.info("{:8}: {:8}: {}".format(self.name, ("SUCCESS" if status else "FAILED"), substitutes["filepath_relative"]))
         # logger.info(self.name + ": " + substitutes["filepath_relative"] + " : " + ("SUCCESS" if status else "FAILED"))
 
         return status
