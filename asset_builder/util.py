@@ -21,27 +21,32 @@ def build_main_substitutions(main_source_root_folder, main_target_root_folder, m
         "main_target_root_folder":      main_target_root_folder,
     }
 
-def build_substitutes(filepath, source_root_folder, target_root_folder):
-    source_filepath = os.path.join(source_root_folder, filepath)
-    target_filepath = os.path.join(target_root_folder, filepath)
+def build_substitutes(filepath, source_root_folder, target_root_folder, staging_root_folder):
+    source_filepath  = os.path.join(source_root_folder, filepath)
+    target_filepath  = os.path.join(target_root_folder, filepath)
+    staging_filepath = os.path.join(staging_root_folder, filepath)
 
     subs = {
-        "file_name":            os.path.basename(filepath),
-        "file_basename":        os.path.splitext(os.path.basename(filepath))[0],
-        "file_extension":       os.path.splitext(os.path.basename(filepath))[1][1:],
-        "filepath_relative":    filepath,
+        "file_name":                os.path.basename(filepath),
+        "file_basename":            os.path.splitext(os.path.basename(filepath))[0],
+        "file_extension":           os.path.splitext(os.path.basename(filepath))[1][1:],
+        "filepath_relative":        filepath,
         
-        "source_filepath_name": os.path.splitext(source_filepath)[0],
-        "target_filepath_name": os.path.splitext(target_filepath)[0],
+        "source_filepath_name":     os.path.splitext(source_filepath)[0],
+        "target_filepath_name":     os.path.splitext(target_filepath)[0],
+        "staging_filepath_name":    os.path.splitext(staging_filepath)[0],
 
-        "source_filepath_dir":  os.path.dirname(source_filepath),
-        "target_filepath_dir":  os.path.dirname(target_filepath),
+        "source_filepath_dir":      os.path.dirname(source_filepath),
+        "target_filepath_dir":      os.path.dirname(target_filepath),
+        "staging_filepath_dir":     os.path.dirname(staging_filepath),
 
-        "source_filepath":      source_filepath,
-        "target_filepath":      target_filepath,
+        "source_filepath":          source_filepath,
+        "target_filepath":          target_filepath,
+        "staging_filepath":         staging_filepath,
 
-        "source_root_folder":   source_root_folder,
-        "target_root_folder":   target_root_folder,
+        "source_root_folder":       source_root_folder,
+        "target_root_folder":       target_root_folder,
+        "staging_root_folder":      staging_root_folder,
     }
         
     return subs

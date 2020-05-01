@@ -95,11 +95,12 @@ class Builder(object):
         # source_folder = self.source_folder if source == "source" else self.staging_folder
         target_folder = self.target_folder if action.target == "target" else self.staging_folder
 
-        file_subs = util.build_substitutes(f, source_folder, target_folder)
+        file_subs = util.build_substitutes(f, source_folder, target_folder, self.staging_folder)
         
         subs = {**self.config.globals, **main_subs, **file_subs}
         
         util.mkdir(subs["target_filepath_dir"])
+        util.mkdir(subs["staging_filepath_dir"])
 
         return action.run(subs, verbose)
 

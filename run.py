@@ -14,9 +14,6 @@ from asset_builder import Watcher, Reporter, Builder, Config, util
 from actions import copy_action
 from actions import external_action
 
-# FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
-# logging.basicConfig(format=FORMAT)
-
 def load_config(path):
     config_file = open(path)
     config = Config(config_file.read())
@@ -26,7 +23,6 @@ def load_config(path):
 if __name__ == "__main__":
     logger.basicConfig(level=logger.INFO,
                         format='%(asctime)s - %(message)s',
-                        # format='%(threadName)-15s : %(asctime)s - %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 
     parser = argparse.ArgumentParser(description='Asset Builder')
