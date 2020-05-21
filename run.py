@@ -46,7 +46,7 @@ if __name__ == "__main__":
         help="Do build")
 
     parser.add_argument('-p', '--post', action="store_true", 
-        help="Do post puild")
+        help="Do post build")
 
     parser.add_argument('-C', '--config', required=True,
         help="Config file")
