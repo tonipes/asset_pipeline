@@ -3,6 +3,8 @@ import os
 import fnmatch
 import datetime
 import logging
+import logging as logger
+
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, wait
 
@@ -70,29 +72,10 @@ class Builder(object):
 
         return grouped
 
-    # def run_action(self, files, action, main_subs, source_folder, verbose=False):
-    #     processed_files = []
-        
-    #     for f in files:
-    #         # source_folder = self.source_folder if source == "source" else self.staging_folder
-    #         target_folder = self.target_folder if action.target == "target" else self.staging_folder
-
-    #         file_subs = util.build_substitutes(f, source_folder, target_folder)
-            
-    #         subs = {**self.config.globals, **main_subs, **file_subs}
-            
-    #         util.mkdir(subs["target_filepath_dir"])
-
-    #         result = action.run(subs, verbose)
-    #         if result:
-    #             processed_files.append(f)
-
-    #     return processed_files
 
     def run_action(self, f, action, main_subs, source_folder, verbose=False):
         processed_files = []
         
-        # source_folder = self.source_folder if source == "source" else self.staging_folder
         target_folder = self.target_folder if action.target == "target" else self.staging_folder
 
         file_subs = util.build_substitutes(f, source_folder, target_folder, self.staging_folder)
@@ -109,22 +92,29 @@ class Builder(object):
             action.run(self.main_subs, verbose)
 
     def build(self, force=False, categories=None, verbose=False):
+        list_of_inputs = []
         list_of_outputs = []
         list_of_processed_files = []
 
         executor = ThreadPoolExecutor()
+        
+        updated = False
 
         # From source folder
         process = []
         for action_idx, files in self.get_grouped_files(self.source_folder).items():
+            list_of_inputs += files
             action = self.config.actions[action_idx]
             if not categories or action.category in categories:
-                filtered_files = [f for f in files if self.need_update(f, action)] if not force else files
-                
-                for f in filtered_files:
-                    process.append([f, 
-                        executor.submit(self.run_action, f, action, self.main_subs, self.source_folder, verbose)
-                    ])
+                for f in files:
+                    if self.need_update(f, action):
+                        updated = True
+                        process.append([f, 
+                            executor.submit(self.run_action, f, action, self.main_subs, self.source_folder, verbose)
+                        ])
+                    else:
+                        logger.info("{:8} {:8.3f}s {:10} {}".format("CACHED", 0.0, "none", f))
+
 
         files = [x[0] for x in process]
         futus = [x[1] for x in process]
@@ -150,4 +140,4 @@ class Builder(object):
         wait([x[1] for x in process])
 
 
-        return list_of_outputs
+        return list_of_inputs, updated, list_of_outputs

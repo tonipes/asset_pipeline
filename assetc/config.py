@@ -12,16 +12,20 @@ def action_decoder(obj):
 
         if not matches:
             logger.error("No action of type " + obj['type'] + " found")
-
+        
         return matches[0](**obj)
 
     return obj
 
 class Config(object):
-    def __init__(self, raw):
+    def __init__(self, raw, platform="unknown"):
         parsed = json.loads(raw, object_hook=action_decoder)
         self.actions = parsed["actions"]
-        self.globals = parsed["globals"]
+
+        self.globals = parsed["globals"]["default"]
+
+        if platform in parsed["globals"]:
+            dict.update(self.globals, parsed["globals"][platform])
 
         self.post_build_actions = parsed["post_build_actions"]
 

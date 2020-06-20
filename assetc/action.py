@@ -33,6 +33,6 @@ class Action(metaclass=ActionRegistery):
         
         filename = subs["filepath_relative"] if "filepath_relative" in subs else self.name
 
-        logger.info("{:8} {:8.3f}s {:8} {}".format(("SUCCESS" if status else "FAILED"), end-start, self.name, filename))
+        logger.info("{:8} {:8.3f}s {:10} {}".format(("SUCCESS" if status else "FAILED"), end-start, self.name, filename))
 
         return status
