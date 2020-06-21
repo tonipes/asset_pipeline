@@ -18,15 +18,12 @@ def action_decoder(obj):
     return obj
 
 class Config(object):
-    def __init__(self, raw, platform="unknown"):
-        parsed = json.loads(raw, object_hook=action_decoder)
-        self.actions = parsed["actions"]
+    def __init__(self, data, platform="unknown"):
+        self.actions = data["actions"]
 
-        self.globals = parsed["globals"]["default"]
+        self.globals = data["globals"]["default"]
 
-        if platform in parsed["globals"]:
-            dict.update(self.globals, parsed["globals"][platform])
-
-        self.post_build_actions = parsed["post_build_actions"]
+        if platform in data["globals"]:
+            dict.update(self.globals, data["globals"][platform])
 
         self.globs = unpack([action.globs for action in self.actions])

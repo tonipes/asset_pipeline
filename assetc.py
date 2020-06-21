@@ -7,16 +7,36 @@ import logging
 import logging as logger
 import shutil
 import zipfile
+import yaml
+
 from time import perf_counter
 
-from .depfile import gen_depfile
+from depfile import gen_depfile
 
 from assetc import Config, Builder
 
+def make_action_constructor(T):
+    return lambda loader, node: T(**loader.construct_mapping(node, deep=True))
+
+def register_constructors():
+    from assetc.action import all_action_types
+    for T in all_action_types:
+        yaml.add_constructor(
+            "!{}".format(T.name), 
+            make_action_constructor(T), 
+            Loader=yaml.Loader
+        )
+
 def load_config(path, platform):
-    config_file = open(path)
-    config = Config(config_file.read(), platform)
-    config_file.close()
+    import yaml
+    from yaml import load, Loader
+
+    register_constructors()
+
+    with open(path) as config_file:
+        res = load(config_file.read(), Loader=Loader)
+        config = Config(res, platform)
+
     return config
 
 def make_archive(base_name, root_dir):
@@ -109,10 +129,6 @@ if __name__ == "__main__":
 
             shutil.rmtree(args.output, ignore_errors=True)   
             shutil.copytree(target_folder, args.output)
-
-            # make_archive(args.output, target_folder)
             
             end = perf_counter()
-            
-            # logger.info("{:8} {:8.3f}s {:10} {}".format("PACKING", end-start, "package", args.output))
 

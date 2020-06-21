@@ -19,6 +19,7 @@ class Builder(object):
         self.cache_folder = cache_folder
         self.staging_folder = staging_folder
         self.config = config
+        
         self.main_subs = {**self.config.globals, **util.build_main_substitutions(self.source_folder, self.target_folder, self.staging_folder)}
 
     def get_current_mtime(self, filepath):
@@ -87,9 +88,6 @@ class Builder(object):
 
         return action.run(subs, verbose)
 
-    def post_build(self, verbose=False):
-        for action in self.config.post_build_actions:
-            action.run(self.main_subs, verbose)
 
     def build(self, force=False, categories=None, verbose=False):
         list_of_inputs = []
