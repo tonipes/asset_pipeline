@@ -20,7 +20,5 @@ class CopyAction(action.Action):
             status = True
         except:
             pass
-        
-        # logger.info("{:8}: {:8}: {}".format("copy", ("SUCCESS" if status else "FAILED"), substitutes["filepath_relative"]))
-        
+                
         return status

@@ -1,21 +1,8 @@
 import logging as logger
 import json
+import yaml
 
 from .action import all_action_types
-
-def unpack(l):
-    return [i for s in l for i in s]
-
-def action_decoder(obj):
-    if 'type' in obj:
-        matches = list(filter(lambda t: t.name == obj['type'], all_action_types))
-
-        if not matches:
-            logger.error("No action of type " + obj['type'] + " found")
-        
-        return matches[0](**obj)
-
-    return obj
 
 class Config(object):
     def __init__(self, data, platform="unknown"):
@@ -26,4 +13,26 @@ class Config(object):
         if platform in data["globals"]:
             dict.update(self.globals, data["globals"][platform])
 
-        self.globs = unpack([action.globs for action in self.actions])
+def make_action_constructor(T):
+    return lambda loader, node: T(**loader.construct_mapping(node, deep=True))
+
+def register_constructors():
+    from assetc.action import all_action_types
+    for T in all_action_types:
+        yaml.add_constructor(
+            "!{}".format(T.name), 
+            make_action_constructor(T), 
+            Loader=yaml.Loader
+        )
+
+def load_config(path, platform):
+    import yaml
+    from yaml import load, Loader
+
+    register_constructors()
+
+    with open(path) as config_file:
+        res = load(config_file.read(), Loader=Loader)
+        config = Config(res, platform)
+
+    return config

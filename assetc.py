@@ -6,62 +6,13 @@ import argparse
 import logging
 import logging as logger
 import shutil
-import zipfile
 import yaml
 
 from time import perf_counter
 
 from depfile import gen_depfile
 
-from assetc import Config, Builder
-
-def make_action_constructor(T):
-    return lambda loader, node: T(**loader.construct_mapping(node, deep=True))
-
-def register_constructors():
-    from assetc.action import all_action_types
-    for T in all_action_types:
-        yaml.add_constructor(
-            "!{}".format(T.name), 
-            make_action_constructor(T), 
-            Loader=yaml.Loader
-        )
-
-def load_config(path, platform):
-    import yaml
-    from yaml import load, Loader
-
-    register_constructors()
-
-    with open(path) as config_file:
-        res = load(config_file.read(), Loader=Loader)
-        config = Config(res, platform)
-
-    return config
-
-def make_archive(base_name, root_dir):
-    save_cwd = os.getcwd()
-    
-    base_name = os.path.abspath(base_name)
-
-    os.chdir(root_dir)
-
-    base_dir = os.curdir
-
-    zip_filename = base_name
-    archive_dir = os.path.dirname(base_name)
-    os.makedirs(archive_dir, exist_ok=True)
-
-    with zipfile.ZipFile(zip_filename, "w", compression=zipfile.ZIP_STORED) as zf:
-        path = os.path.normpath(base_dir)
-
-        for dirpath, dirnames, filenames in os.walk(base_dir):
-            for name in filenames:
-                path = os.path.normpath(os.path.join(dirpath, name))
-                if os.path.isfile(path):
-                    zf.write(path, "/" + path)
-
-    os.chdir(save_cwd)
+from assetc import Config, Builder, load_config
 
 if __name__ == "__main__":
     logger.basicConfig(level=logger.INFO,
@@ -98,13 +49,11 @@ if __name__ == "__main__":
     cache_folder    = os.path.normpath(os.path.join(args.cache, "cache"))
     staging_folder  = os.path.normpath(os.path.join(args.cache, "staging"))
     
-    pack_file = os.path.join(args.cache, "target.zip")
-
-    if (args.verbose):
-        print("source_folder: " + source_folder)
-        print("target_folder: " + target_folder)
-        print("cache_folder: " + cache_folder)
-        print("staging_folder: " + staging_folder)
+    if args.verbose:
+        print("source_folder: "     + source_folder)
+        print("target_folder: "     + target_folder)
+        print("cache_folder: "      + cache_folder)
+        print("staging_folder: "    + staging_folder)
 
     builder = Builder(source_folder, target_folder, cache_folder, staging_folder, config)
     
@@ -117,7 +66,7 @@ if __name__ == "__main__":
         logger.info("Building assets")
 
         inputs, updated, outputs = builder.build(True, None, args.verbose)
-        
+
         depfile = gen_depfile(args.output, [os.path.normpath(os.path.join(source_folder, f)) for f in inputs])
         depfile_path = args.output + '.d'
 
@@ -131,4 +80,7 @@ if __name__ == "__main__":
             shutil.copytree(target_folder, args.output)
             
             end = perf_counter()
+        else:
+            logger.info("No assets updated")
 
+        logger.info("Done")

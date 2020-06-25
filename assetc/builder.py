@@ -4,6 +4,7 @@ import fnmatch
 import datetime
 import logging
 import logging as logger
+from time import perf_counter
 
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, wait
@@ -11,14 +12,15 @@ from concurrent.futures import ThreadPoolExecutor, wait
 from . import util
 
 CACHE_EXT = ".cache"
+LOG_FORMAT = "{:8} {:8.3f}s {:10} {}"
 
 class Builder(object):
     def __init__(self, source_folder, target_folder, cache_folder, staging_folder, config):
-        self.source_folder = source_folder
-        self.target_folder = target_folder
-        self.cache_folder = cache_folder
+        self.source_folder  = source_folder
+        self.target_folder  = target_folder
+        self.cache_folder   = cache_folder
         self.staging_folder = staging_folder
-        self.config = config
+        self.config         = config
         
         self.main_subs = {**self.config.globals, **util.build_main_substitutions(self.source_folder, self.target_folder, self.staging_folder)}
 
@@ -34,7 +36,7 @@ class Builder(object):
         if os.path.isfile(cache_file):
             try:
                 with open(cache_file, "r") as f:
-                    return float( f.read())
+                    return float(f.read())
             except ValueError:
                 pass
 
@@ -64,17 +66,16 @@ class Builder(object):
 
         grouped = defaultdict(list)
 
-        for i, action in enumerate(self.config.actions):
+        for action_key, action in self.config.actions.items():
             for g in action.globs:
                 for source_file in source_files:
                     relative = os.path.relpath(source_file, folder)
                     if fnmatch.fnmatch(relative, g):
-                        grouped[i].append(relative)
+                        grouped[action_key].append(relative)
 
         return grouped
 
-
-    def run_action(self, f, action, main_subs, source_folder, verbose=False):
+    def run_action(self, f, action_key, action, main_subs, source_folder, verbose=False):
         processed_files = []
         
         target_folder = self.target_folder if action.target == "target" else self.staging_folder
@@ -86,8 +87,14 @@ class Builder(object):
         util.mkdir(subs["target_filepath_dir"])
         util.mkdir(subs["staging_filepath_dir"])
 
-        return action.run(subs, verbose)
+        start = perf_counter()
+        status = action.run(subs, verbose)
+        end = perf_counter()
 
+        filename = subs["filepath_relative"] if "filepath_relative" in subs else action_key
+        logger.info(LOG_FORMAT.format(("SUCCESS" if status else "FAILED"), end-start, action_key, filename))
+
+        return status
 
     def build(self, force=False, categories=None, verbose=False):
         list_of_inputs = []
@@ -100,19 +107,16 @@ class Builder(object):
 
         # From source folder
         process = []
-        for action_idx, files in self.get_grouped_files(self.source_folder).items():
+        for action_key, files in self.get_grouped_files(self.source_folder).items():
             list_of_inputs += files
-            action = self.config.actions[action_idx]
+            action = self.config.actions[action_key]
             if not categories or action.category in categories:
                 for f in files:
                     if self.need_update(f, action):
                         updated = True
                         process.append([f, 
-                            executor.submit(self.run_action, f, action, self.main_subs, self.source_folder, verbose)
+                            executor.submit(self.run_action, f, action_key, action, self.main_subs, self.source_folder, verbose)
                         ])
-                    else:
-                        logger.info("{:8} {:8.3f}s {:10} {}".format("CACHED", 0.0, "none", f))
-
 
         files = [x[0] for x in process]
         futus = [x[1] for x in process]
@@ -126,16 +130,6 @@ class Builder(object):
 
         process.clear()
 
-        # From staging folder
-        for action_idx, files in self.get_grouped_files(self.staging_folder).items():
-            action = self.config.actions[action_idx]
-            if not categories or action.category in categories:
-                for f in files:
-                    process.append([f, 
-                        executor.submit(self.run_action, f, action, self.main_subs, self.staging_folder, verbose)
-                    ])
-
         wait([x[1] for x in process])
-
 
         return list_of_inputs, updated, list_of_outputs
